@@ -1,3 +1,13 @@
 v0.79
 -----
 
+* The MDS has lost support for the 'anchor table' mechanism that used
+  to be necessary for resolving files with multiple hard links.  The
+  new code instead relies on 'backtrace' attributes on objects for
+  newly created files.  If you have an existing file system that
+  contains files with hard links, you should ensure they have been
+  updated to include backtraces before upgrading by triggering a
+  modification to the file inode.  This can be accomplished with::
+
+    find . -type f \! -links 1 -exec touch \{\} \;
+
