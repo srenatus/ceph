@@ -580,10 +580,10 @@ public:
 
   // -- tids --
   // for ops i issue
-  tid_t last_tid;
+  ceph_tid_t last_tid;
   Mutex tid_lock;
-  tid_t get_tid() {
-    tid_t t;
+  ceph_tid_t get_tid() {
+    ceph_tid_t t;
     tid_lock.Lock();
     t = ++last_tid;
     tid_lock.Unlock();
@@ -1471,7 +1471,7 @@ protected:
     pg_stat_queue_lock.Unlock();
   }
 
-  tid_t get_tid() {
+  ceph_tid_t get_tid() {
     return service.get_tid();
   }
 
@@ -1516,11 +1516,11 @@ protected:
   // -- commands --
   struct Command {
     vector<string> cmd;
-    tid_t tid;
+    ceph_tid_t tid;
     bufferlist indata;
     ConnectionRef con;
 
-    Command(vector<string>& c, tid_t t, bufferlist& bl, Connection *co)
+    Command(vector<string>& c, ceph_tid_t t, bufferlist& bl, Connection *co)
       : cmd(c), tid(t), indata(bl), con(co) {}
   };
   list<Command*> command_queue;
@@ -1568,7 +1568,7 @@ protected:
 
   void handle_command(class MMonCommand *m);
   void handle_command(class MCommand *m);
-  void do_command(Connection *con, tid_t tid, vector<string>& cmd, bufferlist& data);
+  void do_command(Connection *con, ceph_tid_t tid, vector<string>& cmd, bufferlist& data);
 
   // -- pg recovery --
   xlist<PG*> recovery_queue;
