@@ -5664,7 +5664,15 @@ int Client::lookup_hash(inodeno_t ino, inodeno_t dirino, const char *name)
   return r;
 }
 
-int Client::lookup_ino(inodeno_t ino)
+
+/**
+ * Load inode into local cache.
+ *
+ * If inode pointer is non-NULL, and take a reference on
+ * the resulting Inode object in one operation, so that caller
+ * can safely assume inode will still be there after return.
+ */
+int Client::lookup_ino(inodeno_t ino, Inode **inode)
 {
   Mutex::Locker lock(client_lock);
   ldout(cct, 3) << "lookup_ino enter(" << ino << ") = " << dendl;
@@ -5674,9 +5682,39 @@ int Client::lookup_ino(inodeno_t ino)
   req->set_filepath(path);
 
   int r = make_request(req, -1, -1, NULL, NULL, rand() % mdsmap->get_num_in_mds());
+  if (r == 0 && inode != NULL) {
+    vinodeno_t vino(ino, CEPH_NOSNAP);
+    unordered_map<vinodeno_t,Inode*>::iterator p = inode_map.find(vino);
+    assert(p != inode_map.end());
+    *inode = p->second;
+    _ll_get(*inode);
+  }
   ldout(cct, 3) << "lookup_ino exit(" << ino << ") = " << r << dendl;
   return r;
 }
+
+
+
+int Client::lookup_parent(Inode *ino)
+{
+  Mutex::Locker lock(client_lock);
+  ldout(cct, 3) << "lookup_parent enter(" << ino << ") = " << dendl;
+
+  if (!ino->dn_set.empty()) {
+    ldout(cct, 3) << "lookup_parent dentry already present" << dendl;
+    return 0;
+  }
+
+  MetaRequest *req = new MetaRequest(CEPH_MDS_OP_LOOKUPPARENT);
+  filepath path(ino->ino);
+  req->set_filepath(path);
+  req->set_inode(ino);
+
+  int r = make_request(req, -1, -1, NULL, NULL, rand() % mdsmap->get_num_in_mds());
+  ldout(cct, 3) << "lookup_parent exit(" << ino << ") = " << r << dendl;
+  return r;
+}
+
 
 Fh *Client::_create_fh(Inode *in, int flags, int cmode)
 {
