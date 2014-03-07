@@ -1169,6 +1169,29 @@ extern "C" struct Inode *ceph_ll_get_inode(class ceph_mount_info *cmount,
   return (cmount->get_client())->ll_get_inode(vino);
 }
 
+
+extern "C" int ceph_ll_lookup_inode(
+    struct ceph_mount_info *cmount,
+    struct inodeno_t ino,
+    Inode **inode)
+{
+  int r = (cmount->get_client())->lookup_ino(ino, inode);
+  if (r) {
+    return r;
+  }
+
+  // Request parent dentry+dir from MDS
+  r = (cmount->get_client())->lookup_parent(*inode);
+  if (r && r != -EINVAL) {
+    // Unexpected error
+    (cmount->get_client())->ll_forget(*inode, 1);
+    return r;
+  } else {
+    // EINVAL indicates node without parents (root)
+    return 0;
+  }
+}
+
 extern "C" int ceph_ll_lookup(class ceph_mount_info *cmount,
 			      struct Inode *parent, const char *name,
 			      struct stat *attr, Inode **out,

@@ -1208,6 +1208,11 @@ int ceph_debug_get_file_caps(struct ceph_mount_info *cmount, const char *path);
 /* Low Level */
 struct Inode *ceph_ll_get_inode(struct ceph_mount_info *cmount,
 				vinodeno_t vino);
+int ceph_ll_lookup_inode(
+    struct ceph_mount_info *cmount,
+    struct inodeno_t ino,
+    Inode **inode);
+
 /**
  * Get the root inode of FS. Increase counter of references for root Inode. You must call ceph_ll_forget for it!
  *
