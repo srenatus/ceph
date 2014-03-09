@@ -11,8 +11,8 @@
 
 inline ostream& operator<<(ostream& out, ceph_filelock& l) {
   out << "start: " << l.start << ", length: " << l.length
-      << ", client: " << l.client << ", pid: " << l.pid
-      << ", pid_ns: " << l.pid_namespace << ", type: " << (int)l.type
+      << ", client: " << l.client << ", owner: " << l.owner
+      << ", pid: " << l.pid << ", type: " << (int)l.type
       << std::endl;
   return out;
 }
@@ -21,8 +21,7 @@ inline bool operator==(ceph_filelock& l, ceph_filelock& r) {
   return
     l.length == r.length &&
     l.client == r.client &&
-    l.pid == r.pid &&
-    l.pid_namespace == r.pid_namespace &&
+    l.owner == r.owner &&
     l.type == r.type;
 }
 

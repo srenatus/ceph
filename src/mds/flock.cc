@@ -16,8 +16,7 @@ bool ceph_lock_state_t::is_waiting(ceph_filelock &fl)
       return false;
     if (p->second.length == fl.length &&
         p->second.client == fl.client &&
-        p->second.pid == fl.pid &&
-        p->second.pid_namespace == fl.pid_namespace)
+        p->second.owner == fl.owner)
       return true;
     ++p;
   }
@@ -32,8 +31,7 @@ void ceph_lock_state_t::remove_waiting(ceph_filelock& fl)
       return;
     if (p->second.length == fl.length &&
         p->second.client == fl.client &&
-        p->second.pid == fl.pid &&
-        p->second.pid_namespace == fl.pid_namespace) {
+        p->second.owner == fl.owner) {
       waiting_locks.erase(p);
       --client_waiting_lock_counts[(client_t)fl.client];
       if (!client_waiting_lock_counts[(client_t)fl.client]) {
@@ -467,16 +465,15 @@ void ceph_lock_state_t::split_by_owner(ceph_filelock& owner,
   while (iter != locks.end()) {
     dout(15) << "comparing to " << (*iter)->second << dendl;
     if ((*iter)->second.client == owner.client &&
-        (*iter)->second.pid_namespace == owner.pid_namespace &&
-        (*iter)->second.pid == owner.pid) {
+        (*iter)->second.owner == owner.owner) {
       dout(15) << "success, pushing to owned_locks" << dendl;
       owned_locks.push_back(*iter);
       iter = locks.erase(iter);
     } else {
       dout(15) << "failure, something not equal in this group "
               << (*iter)->second.client << ":" << owner.client << ","
-              << (*iter)->second.pid_namespace << ":" << owner.pid_namespace
-              << "," << (*iter)->second.pid << ":" << owner.pid << dendl;
+	      << (*iter)->second.owner << ":" << owner.owner << ","
+	      << (*iter)->second.pid << ":" << owner.pid << dendl;
       ++iter;
     }
   }
