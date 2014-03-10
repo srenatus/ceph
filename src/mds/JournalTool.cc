@@ -184,11 +184,17 @@ int JournalTool::main_event(std::vector<const char*> argv)
   } else if (output_verb == "summary") {
     for (JournalScanner::EventMap::iterator i = js.events.begin(); i != js.events.end(); ++i) {
       std::string path;
+      std::string detail;
       if (i->second->get_type() == EVENT_UPDATE) {
         EUpdate *eu = reinterpret_cast<EUpdate*>(i->second);
         path = eu->metablob.get_path();
+        detail = eu->type;
       }
-      dout(1) << "0x" << std::hex << i->first << std::dec << " " << i->second->get_type_str() << ": " << path << dendl;
+      dout(1) << "0x"
+        << std::hex << i->first << std::dec << " "
+        << i->second->get_type_str() << ": "
+        << path << "("
+        << detail << ")" << dendl;
     }
   } else {
     derr << "Bad output command '" << output_verb << "'" << dendl;
